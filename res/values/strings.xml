@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="weathersource"><i>Data Provided by Weather Underground</i></string>
+    <string name="app_name">Wunder</string>
+</resources>
