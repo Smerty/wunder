@@ -47,7 +47,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class wunder extends Activity implements LocationListener {
+public class Wunder extends Activity implements LocationListener {
 
 	public static final String PREFS_NAME = "WunderPrefs";
 	private LocationManager locationManager;
@@ -59,7 +59,7 @@ public class wunder extends Activity implements LocationListener {
 	ScrollView sv;
 	TableLayout table;
 	
-	private AsyncTask<wunder, Integer, Integer> updatetask;
+	private AsyncTask<Wunder, Integer, Integer> updatetask;
 	public ProgressDialog progressDialog;
 
 	WeatherReport conds;
@@ -95,11 +95,11 @@ public class wunder extends Activity implements LocationListener {
 		setContentView(sv);
 	}
 	
-	private class UpdateFeedTask extends AsyncTask<wunder, Integer, Integer> {
+	private class UpdateFeedTask extends AsyncTask<Wunder, Integer, Integer> {
 
-		wunder that;
+		Wunder that;
 
-		protected Integer doInBackground(wunder... thats) {
+		protected Integer doInBackground(Wunder... thats) {
 
 			if (that == null) {
 				this.that = thats[0];
@@ -144,7 +144,7 @@ public class wunder extends Activity implements LocationListener {
 	public void allTogether() {
 		
 		
-		wunder that = this;
+		Wunder that = this;
 		
 		
 		
@@ -465,7 +465,7 @@ public class wunder extends Activity implements LocationListener {
 			
 			alert.setView(alertLayout);
 			
-			final wunder that = this;
+			final Wunder that = this;
 
 			
 			alert.setPositiveButton("Set",
@@ -777,7 +777,7 @@ public class wunder extends Activity implements LocationListener {
 		final String PWSid[] = tmpPWSID;
 		
 		
-		final wunder thatPWSList = this;
+		final Wunder thatPWSList = this;
 		
 		
 		alertPWSList.setSingleChoiceItems(PWSName, -1, new DialogInterface.OnClickListener() {

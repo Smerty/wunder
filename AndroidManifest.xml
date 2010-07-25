@@ -3,7 +3,7 @@
       package="com.smerty.wunder"
       android:versionName="1.2" android:versionCode="6">
     <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
-        <activity android:name=".wunder"
+        <activity android:name=".Wunder"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
