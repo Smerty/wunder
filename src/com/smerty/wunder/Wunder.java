@@ -753,12 +753,18 @@ public class Wunder extends Activity implements LocationListener {
 			
 			try {
 
-				for (int i = 0; i < doc.getElementsByTagName("neighborhood").getLength(); i++) {
+				int pwsStationCount = doc.getElementsByTagName("neighborhood").getLength();
+				
+				tmpPWSName = new String[pwsStationCount];
+				tmpPWSID = new String[pwsStationCount];
+				
+				for (int i = 0; i < pwsStationCount; i++) {
 					tmpPWSName[i] = doc.getElementsByTagName("neighborhood").item(i).getChildNodes().item(0).getNodeValue().replaceAll("\\s+", " ");
 					tmpPWSID[i] = doc.getElementsByTagName("id").item(i).getChildNodes().item(0).getNodeValue();
 				}
 
 			} catch (Exception e) {
+				Log.d("onLocation Changed", e.toString() + " / " + e.getMessage());
 				// do nothing
 			}
 		} catch (IOException e1) {
