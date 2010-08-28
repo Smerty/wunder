@@ -391,10 +391,10 @@ public class Wunder extends Activity implements LocationListener {
 	public static final int MENU_GEO = 14;
 
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0, MENU_ABOUT, 0, "About");
-		// menu.add(0, MENU_REFRESH, 0, "Refresh");
+		menu.add(0, MENU_REFRESH, 0, "Refresh");
 		menu.add(0, MENU_GEO, 0, "Nearby PWS");
 		menu.add(0, MENU_SETTINGS, 0, "Settings");
+		menu.add(0, MENU_ABOUT, 0, "About");
 		menu.add(0, MENU_QUIT, 0, "Quit");
 		return true;
 	}
@@ -408,7 +408,7 @@ public class Wunder extends Activity implements LocationListener {
 			geoHelper();
 			return true;
 		case MENU_REFRESH:
-			// this.onCreate(null);
+			this.onCreate(null);
 			return true;
 		case MENU_SETTINGS:
 
