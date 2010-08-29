@@ -26,6 +26,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
@@ -93,6 +94,14 @@ public class Wunder extends Activity implements LocationListener {
 
 		sv.addView(table);
 		setContentView(sv);
+	}
+	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+	  super.onConfigurationChanged(newConfig);
+	  if (sv != null) {
+		  setContentView(sv);
+	  }
 	}
 
 	private class UpdateFeedTask extends AsyncTask<Wunder, Integer, Integer> {
