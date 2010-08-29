@@ -2,7 +2,9 @@ package com.smerty.wunder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -60,6 +62,7 @@ public class Wunder extends Activity implements LocationListener {
 	TableLayout table;
 
 	private AsyncTask<Wunder, Integer, Integer> updatetask;
+	private AsyncTask<Location, Integer, Map<String, String>> localstationstask;
 	public ProgressDialog progressDialog;
 
 	WeatherReport conds;
@@ -131,6 +134,47 @@ public class Wunder extends Activity implements LocationListener {
 			// Log.d("onPostExecute", that.getApplicationInfo().packageName);
 			that.allTogether();
 
+		}
+	}
+
+	private class GetLocalStationsTask extends AsyncTask<Location, Integer, Map<String, String>> {
+
+		Wunder that;
+
+		protected Map<String, String> doInBackground(Location... locations) {
+			
+			this.that = Wunder.this;
+			
+			Map<String, String>  stations = null;
+
+			publishProgress(0);
+
+			try {
+				stations = that.downloadLocalStations(locations[0]);				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			publishProgress(100);
+
+			return stations;
+		}
+
+		protected void onProgressUpdate(Integer... progress) {
+			Log.d("onProgressUpdate", progress[0].toString());
+			if (progress[0] == 0) {
+				that.progressDialog = ProgressDialog.show(that, "Wunder",
+						"Downloading Local Stations", true, false);
+			}
+			if (progress[0] == 100) {
+				that.progressDialog.dismiss();
+			}
+
+		}
+
+		protected void onPostExecute(Map<String, String> result) {
+			// Log.d("onPostExecute", that.getApplicationInfo().packageName);
+			that.processLocalStations(result);
 		}
 	}
 
@@ -700,121 +744,118 @@ public class Wunder extends Activity implements LocationListener {
 		super.onPause();
 	}
 
-	public void onLocationChanged(Location location) {
-		printLocation(location);
+	public Map<String, String> downloadLocalStations(Location location) {
 
-		String tmpPWSName[] = null;
-		String tmpPWSID[] = null;
+		try {
+			HttpParams params = new BasicHttpParams();
+			HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+			HttpProtocolParams.setContentCharset(params, "UTF-8");
+			HttpProtocolParams.setUseExpectContinue(params, true);
+			HttpProtocolParams.setHttpElementCharset(params, "UTF-8");
+			HttpProtocolParams
+					.setUserAgent(params, "java (wunder for android)");
 
-		if (location == null) {
-			// Failed
-			Toast.makeText(getBaseContext(), "Location Failure...",
-					Toast.LENGTH_SHORT).show();
-			return;
-		} else {
+			DefaultHttpClient client = new DefaultHttpClient(params);
+
+			InputStream data = null;
+
 			try {
-				HttpParams params = new BasicHttpParams();
-				HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-				HttpProtocolParams.setContentCharset(params, "UTF-8");
-				HttpProtocolParams.setUseExpectContinue(params, true);
-				HttpProtocolParams.setHttpElementCharset(params, "UTF-8");
-				HttpProtocolParams.setUserAgent(params,
-						"java (wunder for android)");
 
-				DefaultHttpClient client = new DefaultHttpClient(params);
+				HttpGet method = new HttpGet(
+						"http://iphone.smerty.com/wunder/wx_near_all.php?lat="
+								+ location.getLatitude() + "&lon="
+								+ location.getLongitude());
+				HttpResponse res = client.execute(method);
+				data = res.getEntity().getContent();
 
-				InputStream data = null;
+			} catch (IOException e) {
+				e.printStackTrace();
+				Toast.makeText(getBaseContext(), "Network Failure...",
+						Toast.LENGTH_SHORT).show();
 
-				try {
+			}
+			Document doc = null;
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db;
 
-					HttpGet method = new HttpGet(
-							"http://iphone.smerty.com/wunder/wx_near_all.php?lat="
-									+ location.getLatitude() + "&lon="
-									+ location.getLongitude());
-					HttpResponse res = client.execute(method);
-					data = res.getEntity().getContent();
-
-				} catch (IOException e) {
-					e.printStackTrace();
-					Toast.makeText(getBaseContext(), "Network Failure...",
-							Toast.LENGTH_SHORT).show();
-
-				}
-				Document doc = null;
-				DocumentBuilderFactory dbf = DocumentBuilderFactory
-						.newInstance();
-				DocumentBuilder db;
-
-				try {
-					db = dbf.newDocumentBuilder();
-					doc = db.parse(data);
-					// finish();
-				} catch (SAXParseException e) {
-					e.printStackTrace();
-					Toast.makeText(getBaseContext(),
-							"SAXParseException, bad XML?", Toast.LENGTH_SHORT)
-							.show();
-					return;
-					// finish();
-				} catch (SAXException e) {
-					// TODO Auto-generated catch block
-					Toast.makeText(getBaseContext(), "SAXException",
-							Toast.LENGTH_SHORT).show();
-					e.printStackTrace();
-					return;
-					// finish();
-				} catch (ParserConfigurationException e) {
-					// TODO Auto-generated catch block
-					Toast.makeText(getBaseContext(),
-							"ParserConfigurationException", Toast.LENGTH_SHORT)
-							.show();
-					e.printStackTrace();
-					return;
-				}
-
-				if (doc != null) {
-					doc.getDocumentElement().normalize();
-				} else {
-					Toast.makeText(getBaseContext(), "doc is null",
-							Toast.LENGTH_SHORT).show();
-					return;
-				}
-
-				try {
-
-					int pwsStationCount = doc.getElementsByTagName(
-							"neighborhood").getLength();
-
-					tmpPWSName = new String[pwsStationCount];
-					tmpPWSID = new String[pwsStationCount];
-
-					for (int i = 0; i < pwsStationCount; i++) {
-						tmpPWSName[i] = doc
-								.getElementsByTagName("neighborhood").item(i)
-								.getChildNodes().item(0).getNodeValue()
-								.replaceAll("\\s+", " ");
-						tmpPWSID[i] = doc.getElementsByTagName("id").item(i)
-								.getChildNodes().item(0).getNodeValue();
-					}
-
-				} catch (Exception e) {
-					Log.d("onLocation Changed", e.toString() + " / "
-							+ e.getMessage());
-					// do nothing
-				}
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			try {
+				db = dbf.newDocumentBuilder();
+				doc = db.parse(data);
+				// finish();
+			} catch (SAXParseException e) {
+				e.printStackTrace();
+				Toast.makeText(getBaseContext(), "SAXParseException, bad XML?",
+						Toast.LENGTH_SHORT).show();
+				return null;
+				// finish();
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				Toast.makeText(getBaseContext(), "SAXException",
+						Toast.LENGTH_SHORT).show();
+				e.printStackTrace();
+				return null;
+				// finish();
+			} catch (ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				Toast.makeText(getBaseContext(),
+						"ParserConfigurationException", Toast.LENGTH_SHORT)
+						.show();
+				e.printStackTrace();
+				return null;
 			}
 
+			if (doc != null) {
+				doc.getDocumentElement().normalize();
+			} else {
+				Toast.makeText(getBaseContext(), "doc is null",
+						Toast.LENGTH_SHORT).show();
+				return null;
+			}
+
+			
+			Map<String, String> stationMap = new HashMap<String, String>();
+
+			try {
+
+				int pwsStationCount = doc.getElementsByTagName("neighborhood")
+						.getLength();
+
+				for (int i = 0; i < pwsStationCount; i++) {
+					String tmpPWSName = doc.getElementsByTagName("neighborhood")
+							.item(i).getChildNodes().item(0).getNodeValue()
+							.replaceAll("\\s+", " ");
+					String tmpPWSID = doc.getElementsByTagName("id").item(i)
+							.getChildNodes().item(0).getNodeValue();
+					
+					if (tmpPWSID.length() > 0 && tmpPWSName.length() > 0) {
+						stationMap.put(tmpPWSID, tmpPWSName);
+					}
+				}
+
+			} catch (Exception e) {
+				Log.d("onLocation Changed", e.toString() + " / " + e.getMessage());
+				return null;
+				// do nothing
+			}
+			
+			return stationMap;
+			
+		} catch (IOException e) {
+			Toast.makeText(getBaseContext(), "exception: " + e.getMessage(),
+					Toast.LENGTH_SHORT).show();
+			e.printStackTrace();
+			return null;
 		}
-		locationManager.removeUpdates(this);
+	}
+
+	public void processLocalStations(Map<String, String> stations) {
 
 		AlertDialog.Builder alertPWSList = new AlertDialog.Builder(this);
 
 		alertPWSList.setTitle("Nearby PWS");
-
-		final String PWSName[] = tmpPWSName;
-		final String PWSid[] = tmpPWSID;
+		
+		final String PWSName[] = stations.values().toArray(new String[0]);
+		final String PWSid[] = stations.keySet().toArray(new String[0]);
 
 		final Wunder thatPWSList = this;
 
@@ -865,6 +906,35 @@ public class Wunder extends Activity implements LocationListener {
 		alertPWSList.setIcon(R.drawable.icon);
 
 		alertPWSList.show();
+
+	}
+
+	public void onLocationChanged(Location location) {
+		printLocation(location);
+
+		if (location == null) {
+			// Failed
+			Toast.makeText(getBaseContext(), "Location Failure...",
+					Toast.LENGTH_SHORT).show();
+			return;
+		} else {
+
+			if (this.localstationstask == null) {
+				Log.d("localstationstask", "task was null, calling execute");
+				this.localstationstask = new GetLocalStationsTask().execute(location);
+			} else {
+				Status s = this.localstationstask.getStatus();
+				if (s == Status.FINISHED) {
+					Log
+							.d("localstationstask",
+									"task wasn't null, status finished, calling execute");
+					this.localstationstask = new GetLocalStationsTask().execute(location);
+				}
+			}
+
+			locationManager.removeUpdates(this);
+
+		}
 
 	}
 
