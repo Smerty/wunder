@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="weathersource"><i>Los datos provistos por Weather Underground</i></string>
+    <string name="message_download_weather_progress">Descargar el clima XML</string>
+    <string name="message_download_local_progress">Descarga de las estaciones locales</string>
+    <string name="message_no_weather">No hay tiempo para mostrar</string>
+    <string name="menu_refresh">Refrescar</string>
+    <string name="menu_nearby">Cerca PWS</string>
+	<string name="menu_settings">Configuración</string>
+	<string name="menu_about">Información</string>
+	<string name="menu_quit">Terminar</string>
+	<string name="button_set">Confirmar</string>
+	<string name="button_cancel">Cancelar</string>
+	<string name="toast_network_failure">Error en la red...</string>
+	<string name="toast_no_nearby">No encontró las estaciones cercanas.</string>
+	<string name="toast_location_failure">Ubicación El incumplimiento...</string>
+	<string name="temperature">Temperatura</string>
+	<string name="dewpoint">Punto de Condensación</string>
+	<string name="relative_humidity">Humedad Relativa</string>
+	<string name="wind_direction">Dirección del Viento</string>
+	<string name="wind_speed">Velocidad del Viento</string>
+	<string name="barometric_pressure">Presión Barométrica</string>
+	<string name="solar_radiation">Radiación Solar</string>
+	<string name="uv_index">Índice UV</string>
+	<string name="precipitation_1hr">Precipitación (hora)</string>
+	<string name="precipitation_today">Precipitación (hoy)</string>
+	<string name="message_data_not_available">Datos no disponibles...</string>
+	<string name="developed_by">Desarrollado por el Smerty Software</string>
+	<string name="use_metric">Uso métrico</string>
+	<string name="pws_station_id">PWS Estación ID</string>
+</resources>
