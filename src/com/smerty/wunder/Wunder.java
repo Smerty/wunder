@@ -95,13 +95,13 @@ public class Wunder extends Activity implements LocationListener {
 		sv.addView(table);
 		setContentView(sv);
 	}
-	
+
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
-	  super.onConfigurationChanged(newConfig);
-	  if (sv != null) {
-		  setContentView(sv);
-	  }
+		super.onConfigurationChanged(newConfig);
+		if (sv != null) {
+			setContentView(sv);
+		}
 	}
 
 	private class UpdateFeedTask extends AsyncTask<Wunder, Integer, Integer> {
@@ -130,8 +130,11 @@ public class Wunder extends Activity implements LocationListener {
 		protected void onProgressUpdate(Integer... progress) {
 			Log.d("onProgressUpdate", progress[0].toString());
 			if (progress[0] == 0) {
-				that.progressDialog = ProgressDialog.show(that, "Wunder",
-						"Downloading Weather XML Feed", true, false);
+				that.progressDialog = ProgressDialog.show(that, that
+						.getResources().getText(R.string.app_name), that
+						.getResources().getText(
+								R.string.message_download_weather_progress),
+						true, false);
 			}
 			if (progress[0] == 100) {
 				that.progressDialog.dismiss();
@@ -146,20 +149,21 @@ public class Wunder extends Activity implements LocationListener {
 		}
 	}
 
-	private class GetLocalStationsTask extends AsyncTask<Location, Integer, Map<String, String>> {
+	private class GetLocalStationsTask extends
+			AsyncTask<Location, Integer, Map<String, String>> {
 
 		Wunder that;
 
 		protected Map<String, String> doInBackground(Location... locations) {
-			
+
 			this.that = Wunder.this;
-			
-			Map<String, String>  stations = null;
+
+			Map<String, String> stations = null;
 
 			publishProgress(0);
 
 			try {
-				stations = that.downloadLocalStations(locations[0]);				
+				stations = that.downloadLocalStations(locations[0]);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -172,8 +176,11 @@ public class Wunder extends Activity implements LocationListener {
 		protected void onProgressUpdate(Integer... progress) {
 			Log.d("onProgressUpdate", progress[0].toString());
 			if (progress[0] == 0) {
-				that.progressDialog = ProgressDialog.show(that, "Wunder",
-						"Downloading Local Stations", true, false);
+				that.progressDialog = ProgressDialog.show(that, that
+						.getResources().getText(R.string.app_name), that
+						.getResources().getText(
+								R.string.message_download_local_progress),
+						true, false);
 			}
 			if (progress[0] == 100) {
 				that.progressDialog.dismiss();
@@ -199,7 +206,7 @@ public class Wunder extends Activity implements LocationListener {
 		if (conds != null) {
 			text.setText(conds.neighborhood);
 		} else {
-			text.setText("No Weather To Display");
+			text.setText(R.string.message_no_weather);
 		}
 		text.setTextSize(24);
 		row.setPadding(3, 3, 3, 3);
@@ -222,10 +229,10 @@ public class Wunder extends Activity implements LocationListener {
 							.valueOf(Math
 									.floor((Double
 											.parseDouble(conds.temperature) - 32) * 5 / 9 * 10) / 10);
-					text.setText("Temperature: \t\t\t\t\t" + conds.temperature
+					text.setText(that.getResources().getText(R.string.temperature) + ": \t\t\t\t\t" + conds.temperature
 							+ "C");
 				} else {
-					text.setText("Temperature: \t\t\t\t\t" + conds.temperature
+					text.setText(that.getResources().getText(R.string.temperature) + ": \t\t\t\t\t" + conds.temperature
 							+ "F");
 				}
 				text.setTextSize(18);
@@ -242,10 +249,10 @@ public class Wunder extends Activity implements LocationListener {
 					conds.dewpoint = String
 							.valueOf(Math
 									.floor((Double.parseDouble(conds.dewpoint) - 32) * 5 / 9 * 10) / 10);
-					text.setText("Dewpoint: \t\t\t\t\t\t" + conds.dewpoint
+					text.setText(that.getResources().getText(R.string.dewpoint) + ": \t\t\t\t\t\t" + conds.dewpoint
 							+ "C");
 				} else {
-					text.setText("Dewpoint: \t\t\t\t\t\t" + conds.dewpoint
+					text.setText(that.getResources().getText(R.string.dewpoint) + ": \t\t\t\t\t\t" + conds.dewpoint
 							+ "F");
 				}
 				text.setTextSize(18);
@@ -259,7 +266,7 @@ public class Wunder extends Activity implements LocationListener {
 				row = new TableRow(that);
 				text = new TextView(that);
 				text
-						.setText("Relative Humidity: \t\t\t" + conds.humidity
+						.setText(that.getResources().getText(R.string.relative_humidity) + ": \t\t\t" + conds.humidity
 								+ "%");
 				text.setTextSize(18);
 				row.setPadding(3, 3, 3, 3);
@@ -273,7 +280,7 @@ public class Wunder extends Activity implements LocationListener {
 					&& Double.valueOf(conds.windspeed) > 0) {
 				row = new TableRow(that);
 				text = new TextView(that);
-				text.setText("Wind Direction: \t\t\t\t" + conds.winddirection);
+				text.setText(that.getResources().getText(R.string.wind_direction) + ": \t\t\t\t" + conds.winddirection);
 				text.setTextSize(18);
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
@@ -292,10 +299,10 @@ public class Wunder extends Activity implements LocationListener {
 					conds.windspeed = String
 							.valueOf(Math
 									.floor((Double.parseDouble(conds.windspeed)) * 1.609344 * 10) / 10);
-					text.setText("Wind Speed: \t\t\t\t\t" + conds.windspeed
+					text.setText(that.getResources().getText(R.string.wind_speed) + ": \t\t\t\t\t" + conds.windspeed
 							+ " km/h");
 				} else {
-					text.setText("Wind Speed: \t\t\t\t\t" + conds.windspeed
+					text.setText(that.getResources().getText(R.string.wind_speed) + ": \t\t\t\t\t" + conds.windspeed
 							+ " mph");
 				}
 				// }
@@ -313,10 +320,10 @@ public class Wunder extends Activity implements LocationListener {
 					conds.pressure = String
 							.valueOf(Math
 									.floor((Double.parseDouble(conds.pressure)) * 33.86389 * 10) / 10);
-					text.setText("Barometric Pressure: \t\t" + conds.pressure
+					text.setText(that.getResources().getText(R.string.barometric_pressure) + ": \t\t" + conds.pressure
 							+ " mb");
 				} else {
-					text.setText("Barometric Pressure: \t\t" + conds.pressure
+					text.setText(that.getResources().getText(R.string.barometric_pressure) + ": \t\t" + conds.pressure
 							+ " in");
 				}
 				text.setTextSize(18);
@@ -330,7 +337,7 @@ public class Wunder extends Activity implements LocationListener {
 					&& conds.solarradiation.length() > 0) {
 				row = new TableRow(that);
 				text = new TextView(that);
-				text.setText("Solar Radiation: \t\t\t\t" + conds.solarradiation
+				text.setText(that.getResources().getText(R.string.solar_radiation) + ": \t\t\t\t" + conds.solarradiation
 						+ " w/m^2");
 				text.setTextSize(18);
 				row.setPadding(3, 3, 3, 3);
@@ -342,7 +349,7 @@ public class Wunder extends Activity implements LocationListener {
 			if (conds.uv != null && conds.uv.length() > 0) {
 				row = new TableRow(that);
 				text = new TextView(that);
-				text.setText("UV Index: \t\t\t\t\t\t" + conds.uv);
+				text.setText(that.getResources().getText(R.string.uv_index) + ": \t\t\t\t\t\t" + conds.uv);
 				text.setTextSize(18);
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
@@ -360,10 +367,10 @@ public class Wunder extends Activity implements LocationListener {
 							.valueOf(Math
 									.floor((Double
 											.parseDouble(conds.precipitation1hr)) * 25.4 * 10) / 10);
-					text.setText("Precipitation (hour): \t\t"
+					text.setText(that.getResources().getText(R.string.precipitation_1hr) + ": \t\t"
 							+ conds.precipitation1hr + " mm");
 				} else {
-					text.setText("Precipitation (hour): \t\t"
+					text.setText(that.getResources().getText(R.string.precipitation_1hr) + ": \t\t"
 							+ conds.precipitation1hr + " in");
 				}
 				text.setTextSize(18);
@@ -383,10 +390,10 @@ public class Wunder extends Activity implements LocationListener {
 							.valueOf(Math
 									.floor((Double
 											.parseDouble(conds.precipitationtoday)) * 25.4 * 10) / 10);
-					text.setText("Precipitation (today): \t\t"
+					text.setText(that.getResources().getText(R.string.precipitation_today) + ": \t\t"
 							+ conds.precipitationtoday + " mm");
 				} else {
-					text.setText("Precipitation (today): \t\t"
+					text.setText(that.getResources().getText(R.string.precipitation_today) + ": \t\t"
 							+ conds.precipitationtoday + " in");
 				}
 				text.setTextSize(18);
@@ -428,7 +435,7 @@ public class Wunder extends Activity implements LocationListener {
 
 			row = new TableRow(that);
 			text = new TextView(that);
-			text.setText("Data not available...");
+			text.setText(R.string.message_data_not_available);
 			text.setTextSize(14);
 			text.setGravity(1);
 			row.setPadding(3, 3, 3, 3);
@@ -446,18 +453,18 @@ public class Wunder extends Activity implements LocationListener {
 	public static final int MENU_GEO = 14;
 
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0, MENU_REFRESH, 0, "Refresh");
-		menu.add(0, MENU_GEO, 0, "Nearby PWS");
-		menu.add(0, MENU_SETTINGS, 0, "Settings");
-		menu.add(0, MENU_ABOUT, 0, "About");
-		menu.add(0, MENU_QUIT, 0, "Quit");
+		menu.add(0, MENU_REFRESH, 0, R.string.menu_refresh);
+		menu.add(0, MENU_GEO, 0, R.string.menu_nearby);
+		menu.add(0, MENU_SETTINGS, 0, R.string.menu_settings);
+		menu.add(0, MENU_ABOUT, 0, R.string.menu_about);
+		menu.add(0, MENU_QUIT, 0, R.string.menu_quit);
 		return true;
 	}
 
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case MENU_ABOUT:
-			Toast.makeText(getBaseContext(), "Developed by Smerty Software",
+			Toast.makeText(getBaseContext(), R.string.developed_by,
 					Toast.LENGTH_LONG).show();
 			return true;
 		case MENU_GEO:
@@ -470,7 +477,7 @@ public class Wunder extends Activity implements LocationListener {
 
 			AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
-			alert.setTitle("PWS Station ID");
+			alert.setTitle(R.string.pws_station_id);
 
 			final EditText input = new EditText(this);
 
@@ -508,7 +515,7 @@ public class Wunder extends Activity implements LocationListener {
 			metricCheckLayout.addView(metricCheck);
 			final TextView metricText = new TextView(this);
 
-			metricText.setText("Use Metric");
+			metricText.setText(R.string.use_metric);
 			metricText.setTextSize(14);
 			metricText.setGravity(2);
 
@@ -521,7 +528,7 @@ public class Wunder extends Activity implements LocationListener {
 
 			final Wunder that = this;
 
-			alert.setPositiveButton("Set",
+			alert.setPositiveButton(R.string.button_set,
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog,
 								int whichButton) {
@@ -551,7 +558,7 @@ public class Wunder extends Activity implements LocationListener {
 						}
 					});
 
-			alert.setNegativeButton("Cancel",
+			alert.setNegativeButton(R.string.button_cancel,
 					new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog,
 								int whichButton) {
@@ -614,7 +621,7 @@ public class Wunder extends Activity implements LocationListener {
 
 			} catch (IOException e) {
 				e.printStackTrace();
-				Toast.makeText(getBaseContext(), "Network Failure...",
+				Toast.makeText(getBaseContext(), R.string.toast_network_failure,
 						Toast.LENGTH_SHORT).show();
 
 				return null;
@@ -630,7 +637,7 @@ public class Wunder extends Activity implements LocationListener {
 				// finish();
 			} catch (SAXParseException e) {
 				e.printStackTrace();
-				Toast.makeText(getBaseContext(), "SAXParseException, bad XML?",
+				Toast.makeText(getBaseContext(), "SAXParseException",
 						Toast.LENGTH_SHORT).show();
 				return null;
 				// finish();
@@ -770,16 +777,19 @@ public class Wunder extends Activity implements LocationListener {
 
 			try {
 
-				HttpGet method = new HttpGet(
-						"http://iphone.smerty.com/wunder/wx_near_all.php?lat="
-								+ location.getLatitude() + "&lon="
-								+ location.getLongitude());
+				String url = "http://iphone.smerty.com/wunder/wx_near_all.php?lat="
+					+ location.getLatitude() + "&lon="
+					+ location.getLongitude();
+				
+				Log.d("downloadLocalStations", "Fetching Url: " + url);
+				
+				HttpGet method = new HttpGet(url);
 				HttpResponse res = client.execute(method);
 				data = res.getEntity().getContent();
 
 			} catch (IOException e) {
 				e.printStackTrace();
-				Toast.makeText(getBaseContext(), "Network Failure...",
+				Toast.makeText(getBaseContext(), R.string.toast_network_failure,
 						Toast.LENGTH_SHORT).show();
 
 			}
@@ -793,7 +803,7 @@ public class Wunder extends Activity implements LocationListener {
 				// finish();
 			} catch (SAXParseException e) {
 				e.printStackTrace();
-				Toast.makeText(getBaseContext(), "SAXParseException, bad XML?",
+				Toast.makeText(getBaseContext(), "SAXParseException",
 						Toast.LENGTH_SHORT).show();
 				return null;
 				// finish();
@@ -821,7 +831,6 @@ public class Wunder extends Activity implements LocationListener {
 				return null;
 			}
 
-			
 			Map<String, String> stationMap = new HashMap<String, String>();
 
 			try {
@@ -850,18 +859,22 @@ public class Wunder extends Activity implements LocationListener {
 							& tmpPWSID.length() > 0 && tmpPWSName.length() > 0) {
 						stationMap.put(tmpPWSID, tmpPWSName);
 					}
+					else {
+						Log.d("downloadLocalStations", "didn't put station in map");
+					}
 				}
 
 			} catch (Exception e) {
-				Log.d("onLocation Changed", e.toString() + " / " + e.getMessage());
+				Log.d("onLocation Changed", e.toString() + " / "
+						+ e.getMessage());
 				return null;
 				// do nothing
 			}
-			
+
 			return stationMap;
-			
+
 		} catch (IOException e) {
-			Toast.makeText(getBaseContext(), "exception: " + e.getMessage(),
+			Toast.makeText(getBaseContext(), e.toString() + ": " + e.getMessage(),
 					Toast.LENGTH_SHORT).show();
 			e.printStackTrace();
 			return null;
@@ -870,10 +883,16 @@ public class Wunder extends Activity implements LocationListener {
 
 	public void processLocalStations(Map<String, String> stations) {
 
+		if (stations == null || stations.size() == 0) {
+			Toast.makeText(getBaseContext(), R.string.toast_no_nearby,
+					Toast.LENGTH_LONG).show();
+			return;
+		}
+
 		AlertDialog.Builder alertPWSList = new AlertDialog.Builder(this);
 
-		alertPWSList.setTitle("Nearby PWS");
-		
+		alertPWSList.setTitle(R.string.menu_nearby);
+
 		final String PWSName[] = stations.values().toArray(new String[0]);
 		final String PWSid[] = stations.keySet().toArray(new String[0]);
 
@@ -890,7 +909,7 @@ public class Wunder extends Activity implements LocationListener {
 
 				});
 
-		alertPWSList.setPositiveButton("Set",
+		alertPWSList.setPositiveButton(R.string.button_set,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						String value = thatPWSList.selectedID.toUpperCase();
@@ -916,7 +935,7 @@ public class Wunder extends Activity implements LocationListener {
 					}
 				});
 
-		alertPWSList.setNegativeButton("Cancel",
+		alertPWSList.setNegativeButton(R.string.button_cancel,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
 						// Canceled.
@@ -934,21 +953,23 @@ public class Wunder extends Activity implements LocationListener {
 
 		if (location == null) {
 			// Failed
-			Toast.makeText(getBaseContext(), "Location Failure...",
+			Toast.makeText(getBaseContext(), R.string.toast_location_failure,
 					Toast.LENGTH_SHORT).show();
 			return;
 		} else {
 
 			if (this.localstationstask == null) {
 				Log.d("localstationstask", "task was null, calling execute");
-				this.localstationstask = new GetLocalStationsTask().execute(location);
+				this.localstationstask = new GetLocalStationsTask()
+						.execute(location);
 			} else {
 				Status s = this.localstationstask.getStatus();
 				if (s == Status.FINISHED) {
 					Log
 							.d("localstationstask",
 									"task wasn't null, status finished, calling execute");
-					this.localstationstask = new GetLocalStationsTask().execute(location);
+					this.localstationstask = new GetLocalStationsTask()
+							.execute(location);
 				}
 			}
 

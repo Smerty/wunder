@@ -17,7 +17,34 @@ public final class R {
         public static final int main=0x7f030000;
     }
     public static final class string {
-        public static final int app_name=0x7f040001;
-        public static final int weathersource=0x7f040000;
+        public static final int app_name=0x7f040000;
+        public static final int barometric_pressure=0x7f040014;
+        public static final int button_cancel=0x7f04000b;
+        public static final int button_set=0x7f04000a;
+        public static final int developed_by=0x7f04001a;
+        public static final int dewpoint=0x7f040010;
+        public static final int menu_about=0x7f040008;
+        public static final int menu_nearby=0x7f040006;
+        public static final int menu_quit=0x7f040009;
+        public static final int menu_refresh=0x7f040005;
+        public static final int menu_settings=0x7f040007;
+        public static final int message_data_not_available=0x7f040019;
+        public static final int message_download_local_progress=0x7f040003;
+        public static final int message_download_weather_progress=0x7f040002;
+        public static final int message_no_weather=0x7f040004;
+        public static final int precipitation_1hr=0x7f040017;
+        public static final int precipitation_today=0x7f040018;
+        public static final int pws_station_id=0x7f04001c;
+        public static final int relative_humidity=0x7f040011;
+        public static final int solar_radiation=0x7f040015;
+        public static final int temperature=0x7f04000f;
+        public static final int toast_location_failure=0x7f04000e;
+        public static final int toast_network_failure=0x7f04000c;
+        public static final int toast_no_nearby=0x7f04000d;
+        public static final int use_metric=0x7f04001b;
+        public static final int uv_index=0x7f040016;
+        public static final int weathersource=0x7f040001;
+        public static final int wind_direction=0x7f040012;
+        public static final int wind_speed=0x7f040013;
     }
 }
