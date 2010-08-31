@@ -830,13 +830,24 @@ public class Wunder extends Activity implements LocationListener {
 						.getLength();
 
 				for (int i = 0; i < pwsStationCount; i++) {
-					String tmpPWSName = doc.getElementsByTagName("neighborhood")
-							.item(i).getChildNodes().item(0).getNodeValue()
-							.replaceAll("\\s+", " ");
-					String tmpPWSID = doc.getElementsByTagName("id").item(i)
-							.getChildNodes().item(0).getNodeValue();
+
+					String tmpPWSName;
+					String tmpPWSID;
 					
-					if (tmpPWSID.length() > 0 && tmpPWSName.length() > 0) {
+					try {
+						tmpPWSName = doc.getElementsByTagName("neighborhood")
+								.item(i).getChildNodes().item(0).getNodeValue()
+								.replaceAll("\\s+", " ");
+					} catch (NullPointerException e) {
+						tmpPWSName = doc.getElementsByTagName("city").item(i)
+								.getChildNodes().item(0).getNodeValue()
+								.replaceAll("\\s+", " ");
+					}
+					tmpPWSID = doc.getElementsByTagName("id").item(i)
+							.getChildNodes().item(0).getNodeValue();
+
+					if (tmpPWSID != null && tmpPWSName != null
+							& tmpPWSID.length() > 0 && tmpPWSName.length() > 0) {
 						stationMap.put(tmpPWSID, tmpPWSName);
 					}
 				}
