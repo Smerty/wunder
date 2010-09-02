@@ -5,13 +5,7 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -38,6 +32,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.smerty.android.DocumentHelper;
 import com.smerty.android.WebFetch;
 
 public class Wunder extends Activity {
@@ -46,20 +41,16 @@ public class Wunder extends Activity {
 
 	private static final String PREFS_NAME = "WunderPrefs";
 	private static final String DEF_STATION_ID = "KCALIVER14";
-	// private LocationManager locationManager;
 	private LocationHelper locationHelper;
-	// private String bestProvider;
-	// private static final String[] LOCATION_STATUS = { "Out of Service",
-	// "Temporarily Unavailable", "Available" };
-	private String selectedID = "";
+	transient private String selectedID = "";
 
-	private ScrollView scrollView;
-	private TableLayout tableLayout;
+	transient private ScrollView scrollView;
+	transient private TableLayout tableLayout;
 
-	private AsyncTask<Wunder, Integer, Integer> updatetask;
+	transient private AsyncTask<Wunder, Integer, Integer> updatetask;
 	public static ProgressDialog progressDialog;
 
-	private WeatherReport conds;
+	transient private WeatherReport conds;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -79,7 +70,9 @@ public class Wunder extends Activity {
 		} else {
 			final Status updateTaskStatus = this.updatetask.getStatus();
 			if (updateTaskStatus == Status.FINISHED) {
-				Log.d(TAG, "task wasn't null, status finished, calling execute");
+				Log
+						.d(TAG,
+								"task wasn't null, status finished, calling execute");
 				this.updatetask = new UpdateFeedTask().execute(this);
 			}
 		}
@@ -307,11 +300,11 @@ public class Wunder extends Activity {
 				tableLayout.addView(row);
 			}
 
-			if (conds.uv != null && conds.uv.length() > 0) {
+			if (conds.uvIndex != null && conds.uvIndex.length() > 0) {
 				row = new TableRow(that);
 				text = new TextView(that);
 				text.setText(that.getResources().getText(R.string.uv_index)
-						+ ": \t\t\t\t\t\t" + conds.uv);
+						+ ": \t\t\t\t\t\t" + conds.uvIndex);
 				text.setTextSize(18);
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
@@ -418,13 +411,13 @@ public class Wunder extends Activity {
 		case MENU_ABOUT:
 			Toast.makeText(getBaseContext(), R.string.developed_by,
 					Toast.LENGTH_LONG).show();
-			return true;
+			break;
 		case MENU_GEO:
 			geoHelper();
-			return true;
+			break;
 		case MENU_REFRESH:
 			this.onCreate(null);
-			return true;
+			break;
 		case MENU_SETTINGS:
 
 			final AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -526,87 +519,41 @@ public class Wunder extends Activity {
 
 			alert.show();
 
-			return true;
+			break;
 		case MENU_QUIT:
 			finish();
-			return true;
+			break;
 		default:
 			return false;
 		}
-	}
-
-	public class WeatherReport {
-		public String stationID, neighborhood, updated, temperature, humidity,
-				winddirection, windspeed, pressure, dewpoint, heatindex,
-				windchill, solarradiation, uv, precipitation1hr, precipToday;
+		return true;
 	}
 
 	public WeatherReport getWeather() {
 
 		WeatherReport retval = new WeatherReport();
 
+		InputStream data;
+
+		String pwsid = null;
+
 		try {
-			InputStream data;
 
-			String pwsid = null;
+			final SharedPreferences settings = getSharedPreferences(PREFS_NAME,
+					0);
+			pwsid = settings.getString("stationID", DEF_STATION_ID);
 
-			try {
+			data = WebFetch.getInputStream(
+					"http://api.wunderground.com/weatherstation/WXCurrentObXML.asp?ID="
+							+ pwsid, "java", "UTF-8");
 
-				final SharedPreferences settings = getSharedPreferences(
-						PREFS_NAME, 0);
-				pwsid = settings.getString("stationID", DEF_STATION_ID);
-
-				data = WebFetch.getInputStream(
-						"http://api.wunderground.com/weatherstation/WXCurrentObXML.asp?ID="
-								+ pwsid, "java", "UTF-8");
-
-			} catch (IOException e) {
-				e.printStackTrace();
-				Toast.makeText(getBaseContext(),
-						R.string.toast_network_failure, Toast.LENGTH_SHORT)
-						.show();
-
-				return null;
-			}
-
-			Document doc = null;
-			final DocumentBuilderFactory dbf = DocumentBuilderFactory
-					.newInstance();
-			DocumentBuilder db;
-
-			try {
-				db = dbf.newDocumentBuilder();
-				doc = db.parse(data);
-				// finish();
-			} catch (SAXParseException e) {
-				e.printStackTrace();
-				Toast.makeText(getBaseContext(), "SAXParseException",
-						Toast.LENGTH_SHORT).show();
-				return null;
-				// finish();
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				Toast.makeText(getBaseContext(), "SAXException",
-						Toast.LENGTH_SHORT).show();
-				e.printStackTrace();
-				return null;
-				// finish();
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				Toast.makeText(getBaseContext(),
-						"ParserConfigurationException", Toast.LENGTH_SHORT)
-						.show();
-				e.printStackTrace();
-				return null;
-			}
-
-			doc.getDocumentElement().normalize();
+			final Document doc = DocumentHelper.getDocument(data);
 
 			try {
 				retval.solarradiation = doc.getElementsByTagName(
 						"solar_radiation").item(0).getChildNodes().item(0)
 						.getNodeValue();
-				retval.uv = doc.getElementsByTagName("UV").item(0)
+				retval.uvIndex = doc.getElementsByTagName("UV").item(0)
 						.getChildNodes().item(0).getNodeValue();
 			} catch (Exception e) {
 				// do nothing
@@ -665,11 +612,14 @@ public class Wunder extends Activity {
 				retval.pressure = doc.getElementsByTagName("pressure_in").item(
 						0).getChildNodes().item(0).getNodeValue();
 			} catch (Exception e) {
-				return null;
+				Log.d(TAG, e.getMessage(), e);
+				retval = null;
 			}
-
-		} catch (IOException e1) {
-			e1.printStackTrace();
+		} catch (IOException e) {
+			Log.d(TAG, e.getMessage(), e);
+			Toast.makeText(getBaseContext(), R.string.toast_network_failure,
+					Toast.LENGTH_SHORT).show();
+			retval = null;
 		}
 
 		return retval;
@@ -700,7 +650,7 @@ public class Wunder extends Activity {
 			return;
 		}
 
-		AlertDialog.Builder alertPWSList = new AlertDialog.Builder(this);
+		final AlertDialog.Builder alertPWSList = new AlertDialog.Builder(this);
 
 		alertPWSList.setTitle(R.string.menu_nearby);
 
@@ -725,15 +675,15 @@ public class Wunder extends Activity {
 				new DialogInterface.OnClickListener() {
 					public void onClick(final DialogInterface dialog,
 							final int whichButton) {
-						String value = thatPWSList.selectedID
+						final String value = thatPWSList.selectedID
 								.toUpperCase(Locale.ENGLISH);
 
-						SharedPreferences settings = getSharedPreferences(
+						final SharedPreferences settings = getSharedPreferences(
 								PREFS_NAME, 0);
-						String pwsid = settings.getString("stationID",
+						final String pwsid = settings.getString("stationID",
 								DEF_STATION_ID);
 
-						SharedPreferences.Editor editor = settings.edit();
+						final SharedPreferences.Editor editor = settings.edit();
 						editor.putString("stationID", value);
 						editor.commit();
 
@@ -761,6 +711,14 @@ public class Wunder extends Activity {
 
 		alertPWSList.show();
 
+	}
+	
+	public LocationHelper getLocationHelper() {
+		return locationHelper;
+	}
+	
+	public void setLocationHelper(LocationHelper locationHelper) {
+		this.locationHelper = locationHelper;
 	}
 
 }

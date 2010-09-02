@@ -6,13 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 import android.app.ProgressDialog;
 import android.location.Criteria;
@@ -26,25 +20,26 @@ import android.os.AsyncTask.Status;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.smerty.android.DocumentHelper;
 import com.smerty.android.WebFetch;
 
 public class LocationHelper implements LocationListener {
 
 	static private final String TAG = LocationHelper.class.getSimpleName();
 
-	private LocationManager locationManager;
-	private String bestProvider;
-	private Wunder wunderActivity;
+	transient final private LocationManager locationManager;
+	transient final private String bestProvider;
+	transient final private Wunder wunderActivity;
 
 	private static final String[] LOCATION_STATUS = { "Out of Service",
 			"Temporarily Unavailable", "Available" };
 
-	private AsyncTask<Location, Integer, Map<String, String>> localstationstask;
+	transient private AsyncTask<Location, Integer, Map<String, String>> localstationstask;
 
-	public LocationHelper(LocationManager locationManager, Wunder wunderObj) {
+	public LocationHelper(final LocationManager locationManager, final Wunder wunderActivity) {
 
 		this.locationManager = locationManager;
-		this.wunderActivity = wunderObj;
+		this.wunderActivity = wunderActivity;
 
 		final List<String> providers = locationManager.getAllProviders();
 		for (String provider : providers) {
@@ -59,7 +54,7 @@ public class LocationHelper implements LocationListener {
 		locationManager.requestLocationUpdates(bestProvider, 20000, 1, this);
 	}
 
-	public void onLocationChanged(Location location) {
+	public void onLocationChanged(final Location location) {
 		printLocation(location);
 
 		if (location == null) {
@@ -74,7 +69,7 @@ public class LocationHelper implements LocationListener {
 				this.localstationstask = new GetLocalStationsTask()
 						.execute(location);
 			} else {
-				Status locationChangedStatus = this.localstationstask
+				final Status locationChangedStatus = this.localstationstask
 						.getStatus();
 				if (locationChangedStatus == Status.FINISHED) {
 					Log
@@ -106,7 +101,7 @@ public class LocationHelper implements LocationListener {
 	}
 
 	private void printProvider(final String provider) {
-		LocationProvider info = locationManager.getProvider(provider);
+		final LocationProvider info = locationManager.getProvider(provider);
 		Log.d(TAG, info.toString());
 	}
 
@@ -120,57 +115,22 @@ public class LocationHelper implements LocationListener {
 
 	public Map<String, String> downloadLocalStations(final Location location) {
 
+		InputStream data;
+		
 		final String url = "http://iphone.smerty.com/wunder/wx_near_all.php?lat="
 				+ location.getLatitude() + "&lon=" + location.getLongitude();
-
-		InputStream data;
+		
+		Map<String, String> stationMap = new HashMap<String, String>();
+		
 		try {
 			data = WebFetch.getInputStream(url, "java (wunder for android)",
 					"UTF-8");
 
-			Document doc = null;
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db;
-
-			try {
-				db = dbf.newDocumentBuilder();
-				doc = db.parse(data);
-				// finish();
-			} catch (SAXParseException e) {
-				e.printStackTrace();
-				Toast.makeText(this.wunderActivity.getBaseContext(),
-						"SAXParseException", Toast.LENGTH_SHORT).show();
-				return null;
-				// finish();
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				Toast.makeText(this.wunderActivity.getBaseContext(),
-						"SAXException", Toast.LENGTH_SHORT).show();
-				e.printStackTrace();
-				return null;
-				// finish();
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				Toast.makeText(this.wunderActivity.getBaseContext(),
-						"ParserConfigurationException", Toast.LENGTH_SHORT)
-						.show();
-				e.printStackTrace();
-				return null;
-			}
-
-			if (doc == null) {
-				// Toast.makeText(getBaseContext(), "doc is null",
-				// Toast.LENGTH_SHORT).show();
-				return null;
-			} else {
-				doc.getDocumentElement().normalize();
-			}
-
-			Map<String, String> stationMap = new HashMap<String, String>();
+			final Document doc = DocumentHelper.getDocument(data);
 
 			try {
 
-				int pwsStationCount = doc.getElementsByTagName("neighborhood")
+				final int pwsStationCount = doc.getElementsByTagName("neighborhood")
 						.getLength();
 
 				for (int i = 0; i < pwsStationCount; i++) {
@@ -199,24 +159,24 @@ public class LocationHelper implements LocationListener {
 				}
 
 			} catch (Exception e) {
-				Log.d(TAG, e.toString() + " / " + e.getMessage());
-				return null;
+				Log.d(TAG, e.getMessage(), e);
+				stationMap = null;
 				// do nothing
 			}
-			return stationMap;
+			//return stationMap;
 
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			return null;
+			//e1.printStackTrace();
+			Log.d(TAG, e1.getMessage(), e1);
+			stationMap = null;
 		}
-
+		return stationMap;
 	}
 
 	private class GetLocalStationsTask extends
 			AsyncTask<Location, Integer, Map<String, String>> {
 
-		private LocationHelper that;
+		transient private LocationHelper that;
 
 		protected Map<String, String> doInBackground(
 				final Location... locations) {
@@ -230,7 +190,8 @@ public class LocationHelper implements LocationListener {
 			try {
 				stations = that.downloadLocalStations(locations[0]);
 			} catch (Exception e) {
-				e.printStackTrace();
+				//e.printStackTrace();
+				Log.d(TAG, e.getMessage(), e);
 			}
 
 			publishProgress(100);
