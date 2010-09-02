@@ -42,6 +42,8 @@ import com.smerty.android.WebFetch;
 
 public class Wunder extends Activity {
 
+	static private final String TAG = Wunder.class.getSimpleName();
+
 	private static final String PREFS_NAME = "WunderPrefs";
 	private static final String DEF_STATION_ID = "KCALIVER14";
 	// private LocationManager locationManager;
@@ -55,8 +57,6 @@ public class Wunder extends Activity {
 	private TableLayout tableLayout;
 
 	private AsyncTask<Wunder, Integer, Integer> updatetask;
-	// private static AsyncTask<Location, Integer, Map<String, String>>
-	// localstationstask;
 	public static ProgressDialog progressDialog;
 
 	private WeatherReport conds;
@@ -74,13 +74,12 @@ public class Wunder extends Activity {
 		tableLayout.setShrinkAllColumns(true);
 
 		if (this.updatetask == null) {
-			Log.d("startDownloading", "task was null, calling execute");
+			Log.d(TAG, "task was null, calling execute");
 			this.updatetask = new UpdateFeedTask().execute(this);
 		} else {
 			final Status updateTaskStatus = this.updatetask.getStatus();
 			if (updateTaskStatus == Status.FINISHED) {
-				Log.d("updatetask",
-						"task wasn't null, status finished, calling execute");
+				Log.d(TAG, "task wasn't null, status finished, calling execute");
 				this.updatetask = new UpdateFeedTask().execute(this);
 			}
 		}
@@ -121,16 +120,16 @@ public class Wunder extends Activity {
 		}
 
 		protected void onProgressUpdate(final Integer... progress) {
-			Log.d("onProgressUpdate", progress[0].toString());
+			Log.d(TAG, progress[0].toString());
 			if (progress[0] == 0) {
-				that.progressDialog = ProgressDialog.show(that, that
+				Wunder.progressDialog = ProgressDialog.show(that, that
 						.getResources().getText(R.string.app_name), that
 						.getResources().getText(
 								R.string.message_download_weather_progress),
 						true, false);
 			}
 			if (progress[0] == 100) {
-				that.progressDialog.dismiss();
+				Wunder.progressDialog.dismiss();
 			}
 
 		}
