@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -52,63 +53,64 @@ import android.widget.Toast;
 
 public class Wunder extends Activity implements LocationListener {
 
-	public static final String PREFS_NAME = "WunderPrefs";
+	private static final String PREFS_NAME = "WunderPrefs";
+	private static final String DEF_STATION_ID = "KCALIVER14";
 	private LocationManager locationManager;
 	private String bestProvider;
-	private static final String[] S = { "Out of Service",
+	private static final String[] LOCATION_STATUS = { "Out of Service",
 			"Temporarily Unavailable", "Available" };
 	private String selectedID = "";
 
-	ScrollView sv;
-	TableLayout table;
+	private ScrollView scrollView;
+	private TableLayout tableLayout;
 
 	private AsyncTask<Wunder, Integer, Integer> updatetask;
 	private AsyncTask<Location, Integer, Map<String, String>> localstationstask;
 	public ProgressDialog progressDialog;
 
-	WeatherReport conds;
+	private WeatherReport conds;
 
 	/** Called when the activity is first created. */
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		// might be a memory leak on rotation since onCreate will be called
 		// again
-		sv = new ScrollView(this);
-		table = new TableLayout(this);
+		scrollView = new ScrollView(this);
+		tableLayout = new TableLayout(this);
 
-		table.setShrinkAllColumns(true);
+		tableLayout.setShrinkAllColumns(true);
 
 		if (this.updatetask == null) {
 			Log.d("startDownloading", "task was null, calling execute");
 			this.updatetask = new UpdateFeedTask().execute(this);
 		} else {
-			Status s = this.updatetask.getStatus();
-			if (s == Status.FINISHED) {
+			final Status updateTaskStatus = this.updatetask.getStatus();
+			if (updateTaskStatus == Status.FINISHED) {
 				Log.d("updatetask",
 						"task wasn't null, status finished, calling execute");
 				this.updatetask = new UpdateFeedTask().execute(this);
 			}
 		}
 
-		sv.addView(table);
-		setContentView(sv);
+		scrollView.addView(tableLayout);
+		setContentView(scrollView);
 	}
 
 	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
+	public void onConfigurationChanged(final Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		if (sv != null) {
-			setContentView(sv);
+		if (scrollView != null) {
+			setContentView(scrollView);
 		}
 	}
 
 	private class UpdateFeedTask extends AsyncTask<Wunder, Integer, Integer> {
 
-		Wunder that;
+		private Wunder that;
 
-		protected Integer doInBackground(Wunder... thats) {
+		protected Integer doInBackground(final Wunder... thats) {
 
 			if (that == null) {
 				this.that = thats[0];
@@ -127,7 +129,7 @@ public class Wunder extends Activity implements LocationListener {
 			return 0;
 		}
 
-		protected void onProgressUpdate(Integer... progress) {
+		protected void onProgressUpdate(final Integer... progress) {
 			Log.d("onProgressUpdate", progress[0].toString());
 			if (progress[0] == 0) {
 				that.progressDialog = ProgressDialog.show(that, that
@@ -142,7 +144,7 @@ public class Wunder extends Activity implements LocationListener {
 
 		}
 
-		protected void onPostExecute(Integer result) {
+		protected void onPostExecute(final Integer result) {
 			// Log.d("onPostExecute", that.getApplicationInfo().packageName);
 			that.allTogether();
 
@@ -152,9 +154,9 @@ public class Wunder extends Activity implements LocationListener {
 	private class GetLocalStationsTask extends
 			AsyncTask<Location, Integer, Map<String, String>> {
 
-		Wunder that;
+		private Wunder that;
 
-		protected Map<String, String> doInBackground(Location... locations) {
+		protected Map<String, String> doInBackground(final Location... locations) {
 
 			this.that = Wunder.this;
 
@@ -173,7 +175,7 @@ public class Wunder extends Activity implements LocationListener {
 			return stations;
 		}
 
-		protected void onProgressUpdate(Integer... progress) {
+		protected void onProgressUpdate(final Integer... progress) {
 			Log.d("onProgressUpdate", progress[0].toString());
 			if (progress[0] == 0) {
 				that.progressDialog = ProgressDialog.show(that, that
@@ -188,7 +190,7 @@ public class Wunder extends Activity implements LocationListener {
 
 		}
 
-		protected void onPostExecute(Map<String, String> result) {
+		protected void onPostExecute(final Map<String, String> result) {
 			// Log.d("onPostExecute", that.getApplicationInfo().packageName);
 			that.processLocalStations(result);
 		}
@@ -196,31 +198,41 @@ public class Wunder extends Activity implements LocationListener {
 
 	public void allTogether() {
 
-		Wunder that = this;
+		final Wunder that = this;
 
-		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-		boolean usemetric = settings.getBoolean("useMetric", false);
+		final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		final boolean usemetric = settings.getBoolean("useMetric", false);
 
 		TableRow row = new TableRow(that);
 		TextView text = new TextView(that);
-		if (conds != null) {
-			text.setText(conds.neighborhood);
-		} else {
+		if (conds == null) {
 			text.setText(R.string.message_no_weather);
+		} else {
+			text.setText(conds.neighborhood);
 		}
 		text.setTextSize(24);
 		row.setPadding(3, 3, 3, 3);
 		row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 		row.addView(text);
-		table.addView(row);
+		tableLayout.addView(row);
 
 		row = new TableRow(that);
 		row.setPadding(3, 1, 3, 1);
 		row.setBackgroundColor(Color.argb(200, 80, 80, 80));
-		table.addView(row);
+		tableLayout.addView(row);
 
-		if (conds != null) {
-
+		if (conds == null) {
+				row = new TableRow(that);
+				text = new TextView(that);
+				text.setText(R.string.message_data_not_available);
+				text.setTextSize(14);
+				text.setGravity(1);
+				row.setPadding(3, 3, 3, 3);
+				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
+				row.addView(text);
+				tableLayout.addView(row);
+		}
+		else {
 			if (conds.temperature != null && conds.temperature.length() > 0) {
 				row = new TableRow(that);
 				text = new TextView(that);
@@ -239,7 +251,7 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.dewpoint != null && conds.dewpoint.length() > 0) {
@@ -259,7 +271,7 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.humidity != null && conds.humidity.length() > 0) {
@@ -272,7 +284,7 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.winddirection != null && conds.winddirection.length() > 0
@@ -285,16 +297,12 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.windspeed != null && conds.windspeed.length() > 0) {
 				row = new TableRow(that);
 				text = new TextView(that);
-				if (Double.valueOf(conds.windspeed) > 0) {
-					// text.setText("Wind: \t\t" + conds.winddirection + " at "+
-					// conds.windspeed + " mph");
-				}
 				if (usemetric) {
 					conds.windspeed = String
 							.valueOf(Math
@@ -310,7 +318,7 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.pressure != null && conds.pressure.length() > 0) {
@@ -330,7 +338,7 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.solarradiation != null
@@ -343,7 +351,7 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.uv != null && conds.uv.length() > 0) {
@@ -354,7 +362,7 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			if (conds.precipitation1hr != null
@@ -377,41 +385,41 @@ public class Wunder extends Activity implements LocationListener {
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
-			if (conds.precipitationtoday != null
-					&& conds.precipitationtoday.length() > 0
-					&& Double.valueOf(conds.precipitationtoday) > 0) {
+			if (conds.precipToday != null
+					&& conds.precipToday.length() > 0
+					&& Double.valueOf(conds.precipToday) > 0) {
 				row = new TableRow(that);
 				text = new TextView(that);
 				if (usemetric) {
-					conds.precipitationtoday = String
+					conds.precipToday = String
 							.valueOf(Math
 									.floor((Double
-											.parseDouble(conds.precipitationtoday)) * 25.4 * 10) / 10);
+											.parseDouble(conds.precipToday)) * 25.4 * 10) / 10);
 					text.setText(that.getResources().getText(R.string.precipitation_today) + ": \t\t"
-							+ conds.precipitationtoday + " mm");
+							+ conds.precipToday + " mm");
 				} else {
 					text.setText(that.getResources().getText(R.string.precipitation_today) + ": \t\t"
-							+ conds.precipitationtoday + " in");
+							+ conds.precipToday + " in");
 				}
 				text.setTextSize(18);
 				row.setPadding(3, 3, 3, 3);
 				row.setBackgroundColor(Color.argb(200, 51, 51, 51));
 				row.addView(text);
-				table.addView(row);
+				tableLayout.addView(row);
 			}
 
 			row = new TableRow(that);
 			row.setPadding(3, 3, 3, 3);
 			row.setBackgroundColor(Color.argb(200, 51, 51, 51));
-			table.addView(row);
+			tableLayout.addView(row);
 
 			row = new TableRow(that);
 			row.setPadding(3, 1, 3, 1);
 			row.setBackgroundColor(Color.argb(200, 80, 80, 80));
-			table.addView(row);
+			tableLayout.addView(row);
 
 			row = new TableRow(that);
 			text = new TextView(that);
@@ -420,7 +428,7 @@ public class Wunder extends Activity implements LocationListener {
 			text.setGravity(2);
 			row.setPadding(3, 3, 3, 3);
 			row.addView(text);
-			table.addView(row);
+			tableLayout.addView(row);
 
 			row = new TableRow(that);
 			text = new TextView(that);
@@ -429,19 +437,8 @@ public class Wunder extends Activity implements LocationListener {
 			text.setGravity(2);
 			row.setPadding(3, 3, 3, 3);
 			row.addView(text);
-			table.addView(row);
+			tableLayout.addView(row);
 
-		} else {
-
-			row = new TableRow(that);
-			text = new TextView(that);
-			text.setText(R.string.message_data_not_available);
-			text.setTextSize(14);
-			text.setGravity(1);
-			row.setPadding(3, 3, 3, 3);
-			row.setBackgroundColor(Color.argb(200, 51, 51, 51));
-			row.addView(text);
-			table.addView(row);
 		}
 
 	}
@@ -452,7 +449,7 @@ public class Wunder extends Activity implements LocationListener {
 	public static final int MENU_SETTINGS = 13;
 	public static final int MENU_GEO = 14;
 
-	public boolean onCreateOptionsMenu(Menu menu) {
+	public boolean onCreateOptionsMenu(final Menu menu) {
 		menu.add(0, MENU_REFRESH, 0, R.string.menu_refresh);
 		menu.add(0, MENU_GEO, 0, R.string.menu_nearby);
 		menu.add(0, MENU_SETTINGS, 0, R.string.menu_settings);
@@ -461,7 +458,7 @@ public class Wunder extends Activity implements LocationListener {
 		return true;
 	}
 
-	public boolean onOptionsItemSelected(MenuItem item) {
+	public boolean onOptionsItemSelected(final MenuItem item) {
 		switch (item.getItemId()) {
 		case MENU_ABOUT:
 			Toast.makeText(getBaseContext(), R.string.developed_by,
@@ -475,21 +472,21 @@ public class Wunder extends Activity implements LocationListener {
 			return true;
 		case MENU_SETTINGS:
 
-			AlertDialog.Builder alert = new AlertDialog.Builder(this);
+			final AlertDialog.Builder alert = new AlertDialog.Builder(this);
 
 			alert.setTitle(R.string.pws_station_id);
 
 			final EditText input = new EditText(this);
 
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-			String pwsid = settings.getString("stationID", "KCALIVER14");
-			boolean useMetric = settings.getBoolean("useMetric", false);
+			final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			final String pwsid = settings.getString("stationID", DEF_STATION_ID);
+			final boolean useMetric = settings.getBoolean("useMetric", false);
 
 			input.setSingleLine(true);
 
-			InputFilter filter = new InputFilter() {
-				public CharSequence filter(CharSequence source, int start,
-						int end, Spanned dest, int dstart, int dend) {
+			final InputFilter filter = new InputFilter() {
+				public CharSequence filter(final CharSequence source, final int start,
+						final int end, final Spanned dest, final int dstart, final int dend) {
 					for (int i = start; i < end; i++) {
 						if (!Character.isLetterOrDigit(source.charAt(i))) {
 							return "";
@@ -530,17 +527,17 @@ public class Wunder extends Activity implements LocationListener {
 
 			alert.setPositiveButton(R.string.button_set,
 					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog,
-								int whichButton) {
-							String value = input.getText().toString().trim()
+						public void onClick(final DialogInterface dialog,
+								final int whichButton) {
+							final String value = input.getText().toString().trim()
 									.toUpperCase();
 
-							SharedPreferences settings = getSharedPreferences(
+							final SharedPreferences settings = getSharedPreferences(
 									PREFS_NAME, 0);
-							String pwsid = settings.getString("stationID",
-									"KCALIVER14");
+							final String pwsid = settings.getString("stationID",
+									DEF_STATION_ID);
 
-							SharedPreferences.Editor editor = settings.edit();
+							final SharedPreferences.Editor editor = settings.edit();
 							editor.putString("stationID", value);
 							editor.putBoolean("useMetric", metricCheck
 									.isChecked());
@@ -560,8 +557,8 @@ public class Wunder extends Activity implements LocationListener {
 
 			alert.setNegativeButton(R.string.button_cancel,
 					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog,
-								int whichButton) {
+						public void onClick(final DialogInterface dialog,
+								final int whichButton) {
 							// canceled
 						}
 					});
@@ -574,19 +571,16 @@ public class Wunder extends Activity implements LocationListener {
 		case MENU_QUIT:
 			finish();
 			return true;
+		default:
+			return false;
 		}
-		return false;
 	}
 
 	public class WeatherReport {
 		public String stationID, neighborhood, updated, temperature, humidity,
 				winddirection, windspeed, pressure, dewpoint, heatindex,
 				windchill, solarradiation, uv, precipitation1hr,
-				precipitationtoday;
-
-		public WeatherReport() {
-			// do nothing
-		}
+				precipToday;
 	}
 
 	public WeatherReport getWeather() {
@@ -602,7 +596,7 @@ public class Wunder extends Activity implements LocationListener {
 			HttpProtocolParams.setHttpElementCharset(params, "UTF-8");
 			HttpProtocolParams.setUserAgent(params, "java");
 
-			DefaultHttpClient client = new DefaultHttpClient(params);
+			final DefaultHttpClient client = new DefaultHttpClient(params);
 
 			InputStream data = null;
 
@@ -610,8 +604,8 @@ public class Wunder extends Activity implements LocationListener {
 
 			try {
 
-				SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-				pwsid = settings.getString("stationID", "KCALIVER14");
+				final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+				pwsid = settings.getString("stationID", DEF_STATION_ID);
 
 				HttpGet method = new HttpGet(
 						"http://api.wunderground.com/weatherstation/WXCurrentObXML.asp?ID="
@@ -628,7 +622,7 @@ public class Wunder extends Activity implements LocationListener {
 			}
 
 			Document doc = null;
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db;
 
 			try {
@@ -673,7 +667,7 @@ public class Wunder extends Activity implements LocationListener {
 				retval.precipitation1hr = doc.getElementsByTagName(
 						"precip_1hr_in").item(0).getChildNodes().item(0)
 						.getNodeValue();
-				retval.precipitationtoday = doc.getElementsByTagName(
+				retval.precipToday = doc.getElementsByTagName(
 						"precip_today_in").item(0).getChildNodes().item(0)
 						.getNodeValue();
 			} catch (Exception e) {
@@ -735,12 +729,12 @@ public class Wunder extends Activity implements LocationListener {
 	public void geoHelper() {
 		locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-		List<String> providers = locationManager.getAllProviders();
+		final List<String> providers = locationManager.getAllProviders();
 		for (String provider : providers) {
 			printProvider(provider);
 		}
 
-		Criteria criteria = new Criteria();
+		final Criteria criteria = new Criteria();
 		bestProvider = locationManager.getBestProvider(criteria, false);
 		Log.d("WUNDERLOC", "BEST Provider:");
 		printProvider(bestProvider);
@@ -760,7 +754,7 @@ public class Wunder extends Activity implements LocationListener {
 		super.onPause();
 	}
 
-	public Map<String, String> downloadLocalStations(Location location) {
+	public Map<String, String> downloadLocalStations(final Location location) {
 
 		try {
 			HttpParams params = new BasicHttpParams();
@@ -823,12 +817,12 @@ public class Wunder extends Activity implements LocationListener {
 				return null;
 			}
 
-			if (doc != null) {
-				doc.getDocumentElement().normalize();
-			} else {
+			if (doc == null) {
 				Toast.makeText(getBaseContext(), "doc is null",
 						Toast.LENGTH_SHORT).show();
 				return null;
+			} else {
+				doc.getDocumentElement().normalize();
 			}
 
 			Map<String, String> stationMap = new HashMap<String, String>();
@@ -881,9 +875,9 @@ public class Wunder extends Activity implements LocationListener {
 		}
 	}
 
-	public void processLocalStations(Map<String, String> stations) {
+	public void processLocalStations(final Map<String, String> stations) {
 
-		if (stations == null || stations.size() == 0) {
+		if (stations == null || stations.isEmpty()) {
 			Toast.makeText(getBaseContext(), R.string.toast_no_nearby,
 					Toast.LENGTH_LONG).show();
 			return;
@@ -901,7 +895,7 @@ public class Wunder extends Activity implements LocationListener {
 		alertPWSList.setSingleChoiceItems(PWSName, -1,
 				new DialogInterface.OnClickListener() {
 
-					public void onClick(DialogInterface dialog, int item) {
+					public void onClick(final DialogInterface dialog, final int item) {
 
 						thatPWSList.selectedID = PWSid[item];
 
@@ -911,13 +905,13 @@ public class Wunder extends Activity implements LocationListener {
 
 		alertPWSList.setPositiveButton(R.string.button_set,
 				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int whichButton) {
-						String value = thatPWSList.selectedID.toUpperCase();
+					public void onClick(final DialogInterface dialog, final int whichButton) {
+						String value = thatPWSList.selectedID.toUpperCase(Locale.ENGLISH);
 
 						SharedPreferences settings = getSharedPreferences(
 								PREFS_NAME, 0);
 						String pwsid = settings.getString("stationID",
-								"KCALIVER14");
+								DEF_STATION_ID);
 
 						SharedPreferences.Editor editor = settings.edit();
 						editor.putString("stationID", value);
@@ -937,7 +931,7 @@ public class Wunder extends Activity implements LocationListener {
 
 		alertPWSList.setNegativeButton(R.string.button_cancel,
 				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int whichButton) {
+					public void onClick(final DialogInterface dialog, final int whichButton) {
 						// Canceled.
 					}
 				});
@@ -963,8 +957,8 @@ public class Wunder extends Activity implements LocationListener {
 				this.localstationstask = new GetLocalStationsTask()
 						.execute(location);
 			} else {
-				Status s = this.localstationstask.getStatus();
-				if (s == Status.FINISHED) {
+				Status locationChangedStatus = this.localstationstask.getStatus();
+				if (locationChangedStatus == Status.FINISHED) {
 					Log
 							.d("localstationstask",
 									"task wasn't null, status finished, calling execute");
@@ -979,25 +973,25 @@ public class Wunder extends Activity implements LocationListener {
 
 	}
 
-	public void onProviderDisabled(String provider) {
+	public void onProviderDisabled(final String provider) {
 		Log.d("WUNDERLOC", "Provider Disabled: " + provider);
 	}
 
-	public void onProviderEnabled(String provider) {
+	public void onProviderEnabled(final String provider) {
 		Log.d("WUNDERLOC", "Provider Enabled: " + provider);
 	}
 
-	public void onStatusChanged(String provider, int status, Bundle extras) {
+	public void onStatusChanged(final String provider, final int status, final Bundle extras) {
 		Log.d("WUNDERLOC", "Provider Status Changed: " + provider + ", Status="
-				+ S[status] + ", Extras=" + extras);
+				+ LOCATION_STATUS[status] + ", Extras=" + extras);
 	}
 
-	private void printProvider(String provider) {
+	private void printProvider(final String provider) {
 		LocationProvider info = locationManager.getProvider(provider);
 		Log.d("WUNDERLOC", info.toString());
 	}
 
-	private void printLocation(Location location) {
+	private void printLocation(final Location location) {
 		if (location == null) {
 			Log.d("WUNDERLOC", "Location[unknown]");
 		} else {
